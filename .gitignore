@@ -152,6 +152,13 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+# Ignore Visual Studio cache files
+ninjacybersquad_tomi/.vs/
+
+# Ignore backup folder
+ninjacybersquad_tomi/backup/
+
+
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
