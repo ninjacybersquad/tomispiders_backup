@@ -17,6 +17,7 @@ class ZweispurigSpider(scrapy.Spider):
     xlsx_file_name = f"{date_stamp}_crawled.xlsx"
 
     seen_items = set()
+    current_page_number = 1
 
     def normalize_string(self, input_string):
         if input_string is None:
@@ -35,6 +36,11 @@ class ZweispurigSpider(scrapy.Spider):
     def parse(self, response):
         dealer_section = response.css(self.dealer_section_css)
         dealers = dealer_section.css('.row')
+
+        if not dealers:
+            self.logger.info(f"No dealers found on page {self.current_page_number}. Stopping crawl.")
+            return 
+
         for dealer in dealers:
             dealer_info = dealer.css(self.dealer_info_css)
             for info in dealer_info:
@@ -57,12 +63,9 @@ class ZweispurigSpider(scrapy.Spider):
                     yield item
                     self.seen_items.add(item_hash)
 
-        next_page_links = response.css('div.pagination a::attr(href)').getall()
-        for next_page in next_page_links:
-            if next_page:
-                next_page_url = response.urljoin(next_page)
-                self.logger.info(f"Following link to {next_page_url}")
-                yield scrapy.Request(next_page_url, callback=self.parse)
+        self.current_page_number += 1
+        next_page_url = f"https://www.zweispurig.at/autohaendler/?seite={self.current_page_number}"
+        yield scrapy.Request(next_page_url, callback=self.parse)
 
     # Extraction functions
     def extract_name(self, selector):

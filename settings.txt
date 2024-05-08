@@ -1,1 +1,1 @@
-open_glogg=false
+open_glogg=true
