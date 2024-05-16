@@ -19,6 +19,10 @@ class ZweispurigSpider(scrapy.Spider):
     seen_items = set()
     current_page_number = 1
 
+    potential_duplicates = []
+    checking_duplicates = False
+    dealer_name_for_duplicates = None
+
     def normalize_string(self, input_string):
         if input_string is None:
             return ''
@@ -33,14 +37,19 @@ class ZweispurigSpider(scrapy.Spider):
             hasher.update(normalized_arg.encode('utf-8'))
         return hasher.hexdigest()
 
+    def search_url(self, dealer_name):
+        return f"https://www.zweispurig.at/autohaendler/?firmenname={dealer_name}&plz=&ort=&vertragshaendler=0&werkstatt=&order=firmenname&search=1"
+
     def parse(self, response):
         dealer_section = response.css(self.dealer_section_css)
         dealers = dealer_section.css('.row')
 
         if not dealers:
-            self.logger.info(f"No dealers found on page {self.current_page_number}. Stopping crawl.")
-            return 
-
+            self.logger.info(f"No dealers found on page {self.current_page_number}. Stopping crawl.") #LAST PAGE COMMENT
+            if not self.checking_duplicates:
+                yield from self.check_duplicates()
+            return
+                
         for dealer in dealers:
             dealer_info = dealer.css(self.dealer_info_css)
             for info in dealer_info:
@@ -62,10 +71,32 @@ class ZweispurigSpider(scrapy.Spider):
                 if item_hash not in self.seen_items:
                     yield item
                     self.seen_items.add(item_hash)
+                else:
+                    if not self.checking_duplicates:
+                        self.potential_duplicates.append(item)
 
-        self.current_page_number += 1
-        next_page_url = f"https://www.zweispurig.at/autohaendler/?seite={self.current_page_number}"
-        yield scrapy.Request(next_page_url, callback=self.parse)
+        if not self.checking_duplicates:
+            self.current_page_number += 1
+            next_page_url = f"https://www.zweispurig.at/autohaendler/?seite={self.current_page_number}"
+            yield scrapy.Request(next_page_url, callback=self.parse)
+        else:
+            self.current_page_number += 1
+            next_page_url = f"https://www.zweispurig.at/autohaendler/?firmenname={self.dealer_name_for_duplicates}&plz=&ort=&vertragshaendler=0&werkstatt=&order=firmenname&search={self.current_page_number}"
+            yield scrapy.Request(next_page_url, callback=self.parse)
+
+    def check_duplicates(self):
+        self.logger.info("Checking duplicates")
+        if len(self.potential_duplicates) <= 0:
+            self.logger.info("No potential duplicates to check.")
+            return 
+        else:
+            self.logger.info(f"Starting to check duplicates for {len(self.potential_duplicates)} items.")
+            self.checking_duplicates = True 
+            current_page_number = 1
+            for item in self.potential_duplicates:
+                self.dealer_name_for_duplicates = item['name']
+                search_url = self.search_url(item['name'])
+                yield scrapy.Request(search_url, callback=self.parse, dont_filter=True)
 
     # Extraction functions
     def extract_name(self, selector):
