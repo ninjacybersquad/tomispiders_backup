@@ -4,20 +4,20 @@ import pandas as pd
 import os
 import sys
 
+# Import the config module
+import config
+
 # Import the compare functions
 from scripts.compare_data import main as compare_main
 
-# --- Path Configurations ---
-
-# Date stamp for file naming
-date_stamp = datetime.now().strftime("%d%m%Y")
-
-# Log Paths
-logs_base_path = 'logs'
-if not os.path.exists(logs_base_path):
-    os.makedirs(logs_base_path)
-log_filename = f"{date_stamp}_log.txt"
-log_filepath = os.path.join(logs_base_path, log_filename)
+# Use the configurations from the config module
+date_stamp = config.date_stamp
+log_filepath = config.log_filepath
+crawled_json_fullpath = config.crawled_json_fullpath
+crawled_excel_fullpath = config.crawled_excel_fullpath
+reference_file_path = config.reference_file_path
+matched_json_path = config.matched_json_path
+matched_excel_path = config.matched_excel_path
 
 # Print a message to the console indicating the process will take a while
 print("Starting the data crawling and conversion process. This might take a while...")
@@ -26,23 +26,6 @@ print("Starting the data crawling and conversion process. This might take a whil
 log_file = open(log_filepath, 'w')
 sys.stdout = log_file
 sys.stderr = log_file
-
-# Crawled Data Paths
-crawled_base_path = 'data/crawled'
-crawled_json_path = f"{crawled_base_path}/json"
-crawled_excel_path = f"{crawled_base_path}/excel"
-crawled_json_filename = f"{date_stamp}_crawled.json"
-crawled_excel_filename = f"{date_stamp}_crawled.xlsx"
-crawled_json_fullpath = f"{crawled_json_path}/{crawled_json_filename}"
-crawled_excel_fullpath = f"{crawled_excel_path}/{crawled_excel_filename}"
-
-# Reference File Path for Comparison
-reference_file_path = 'data/willhaben/willhaben.xlsx'
-
-# Matched Data Paths
-matched_base_path = 'data/matched'
-matched_json_path = f"{matched_base_path}/json"
-matched_excel_path = f"{matched_base_path}/excel"
 
 # Function to run the spider and save crawled data directly to JSON
 def run_spider():
