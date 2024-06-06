@@ -1,6 +1,5 @@
 import scrapy
 import re
-import os
 import hashlib
 from datetime import datetime
 
@@ -11,10 +10,6 @@ class ZweispurigSpider(scrapy.Spider):
 
     dealer_section_css = '.page-content[style="margin-top:15px"] .container .col-md-8.col-md-pull-4'
     dealer_info_css = '.col-md-9.col-sm-9'
-
-    date_stamp = datetime.now().strftime("%Y%m%d")
-    json_file_name = f"{date_stamp}_crawled.json"
-    xlsx_file_name = f"{date_stamp}_crawled.xlsx"
 
     seen_items = set()
     current_page_number = 1
@@ -34,11 +29,14 @@ class ZweispurigSpider(scrapy.Spider):
         return hasher.hexdigest()
 
     def parse(self, response):
+        print(f"Processing page {self.current_page_number}...")  # Console comment
+
         dealer_section = response.css(self.dealer_section_css)
         dealers = dealer_section.css('.row')
 
         if not dealers:
             self.logger.info(f"No dealers found on page {self.current_page_number}. Stopping crawl.")
+            print(f"No dealers found on page {self.current_page_number}. Stopping crawl.")  # Console comment
             return 
 
         for dealer in dealers:
@@ -62,9 +60,11 @@ class ZweispurigSpider(scrapy.Spider):
                 if item_hash not in self.seen_items:
                     yield item
                     self.seen_items.add(item_hash)
+                    print(f"New dealer found: {item['name']} at {item['street_address']}")  # Console comment
 
         self.current_page_number += 1
         next_page_url = f"https://www.zweispurig.at/autohaendler/?seite={self.current_page_number}"
+        print(f"Moving to next page: {self.current_page_number}")  # Console comment
         yield scrapy.Request(next_page_url, callback=self.parse)
 
     # Extraction functions
@@ -89,7 +89,6 @@ class ZweispurigSpider(scrapy.Spider):
         return address_parts[2] if len(address_parts) > 2 else " "
 
     def extract_stadt(self, selector):
-        # Implement as needed
         return " "
 
     def extract_phone(self, selector):

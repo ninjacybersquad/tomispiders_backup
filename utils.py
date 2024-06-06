@@ -1,5 +1,3 @@
-# utils.py
-
 import sys
 
 class Logger:
@@ -10,9 +8,11 @@ class Logger:
     def write(self, message):
         self.terminal.write(message)
         self.log_file.write(message)
+        self.flush()  # Ensure message is immediately written to both log and console
 
     def flush(self):
         self.terminal.flush()
+        self.log_file.flush()
 
     def close(self):
         self.log_file.close()

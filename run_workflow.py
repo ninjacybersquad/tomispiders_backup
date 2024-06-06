@@ -11,6 +11,8 @@ from utils import setup_logger
 # Import the compare functions
 from scripts.compare_data import main as compare_main
 
+human_like_behavior = os.getenv('HUMAN_LIKE_BEHAVIOR', 'False').lower() in ('true', '1', 't')
+
 # Use the configurations from the config module
 date_stamp = config.date_stamp
 log_filepath = config.log_filepath
@@ -24,6 +26,12 @@ matched_excel_path = config.matched_excel_path
 logger = setup_logger(log_filepath)
 
 print("Starting the data crawling and conversion process. This might take a while...")
+
+if human_like_behavior:
+    print("Running with human-like behavior (delays and random user agents).")
+else:
+    print("Running in fast mode (no delays - human-like behavior deactivated).")
+
 
 # Function to run the spider and save crawled data directly to JSON
 def run_spider():
@@ -45,7 +53,6 @@ def run_spider():
         print("Spider run completed successfully.")
     except Exception as e:
         print(f"An error occurred while running the spider: {e}")
-        sys.stdout.flush()
 
 # Function to convert the JSON data to an Excel file
 def convert_json_to_excel():
@@ -71,7 +78,6 @@ def convert_json_to_excel():
             print(f"Data successfully converted to Excel and saved to: {crawled_excel_fullpath}")
     except Exception as e:
         print(f"An error occurred while converting JSON to Excel: {e}")
-        sys.stdout.flush()
 
 # Function to run the comparison between the crawled Excel data and the reference file
 def run_comparison(crawled_excel_fullpath, reference_file_path):
@@ -85,7 +91,6 @@ def run_comparison(crawled_excel_fullpath, reference_file_path):
             print("Comparison failed or returned no results.")
     except Exception as e:
         print(f"An error occurred during the comparison: {e}")
-        sys.stdout.flush()
 
 # Function to save the matched data to JSON and Excel
 def save_matched_data(matched_df):
@@ -108,25 +113,21 @@ def save_matched_data(matched_df):
         print("Matched data successfully saved.")
     except Exception as e:
         print(f"An error occurred while saving matched data: {e}")
-        sys.stdout.flush()
 
 if __name__ == '__main__':
     try:
         run_spider()
     except Exception as e:
         print(f"An error occurred in run_spider: {e}")
-        sys.stdout.flush()
 
     try:
         convert_json_to_excel()
     except Exception as e:
         print(f"An error occurred in convert_json_to_excel: {e}")
-        sys.stdout.flush()
 
     try:
         run_comparison(crawled_excel_fullpath, reference_file_path)
     except Exception as e:
         print(f"An error occurred in run_comparison: {e}")
-        sys.stdout.flush()
 
     logger.close()

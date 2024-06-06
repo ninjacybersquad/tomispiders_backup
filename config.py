@@ -35,3 +35,6 @@ matched_json_path = 'backup/matchedjson'
 matched_excel_path = 'backup/matchedexcel'
 create_dir(matched_json_path)
 create_dir(matched_excel_path)
+
+# Flag to enable or disable human-like behavior
+os.environ['HUMAN_LIKE_BEHAVIOR'] = 'True'
