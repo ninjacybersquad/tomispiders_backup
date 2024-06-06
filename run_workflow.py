@@ -6,6 +6,7 @@ import sys
 
 # Import the config module
 import config
+from utils import setup_logger
 
 # Import the compare functions
 from scripts.compare_data import main as compare_main
@@ -19,13 +20,10 @@ reference_file_path = config.reference_file_path
 matched_json_path = config.matched_json_path
 matched_excel_path = config.matched_excel_path
 
-# Print a message to the console indicating the process will take a while
-print("Starting the data crawling and conversion process. This might take a while...")
+# Setup logger
+logger = setup_logger(log_filepath)
 
-# Overwrite the log file if it exists
-log_file = open(log_filepath, 'w')
-sys.stdout = log_file
-sys.stderr = log_file
+print("Starting the data crawling and conversion process. This might take a while...")
 
 # Function to run the spider and save crawled data directly to JSON
 def run_spider():
@@ -47,7 +45,7 @@ def run_spider():
         print("Spider run completed successfully.")
     except Exception as e:
         print(f"An error occurred while running the spider: {e}")
-
+        sys.stdout.flush()
 
 # Function to convert the JSON data to an Excel file
 def convert_json_to_excel():
@@ -73,7 +71,7 @@ def convert_json_to_excel():
             print(f"Data successfully converted to Excel and saved to: {crawled_excel_fullpath}")
     except Exception as e:
         print(f"An error occurred while converting JSON to Excel: {e}")
-
+        sys.stdout.flush()
 
 # Function to run the comparison between the crawled Excel data and the reference file
 def run_comparison(crawled_excel_fullpath, reference_file_path):
@@ -87,7 +85,7 @@ def run_comparison(crawled_excel_fullpath, reference_file_path):
             print("Comparison failed or returned no results.")
     except Exception as e:
         print(f"An error occurred during the comparison: {e}")
-
+        sys.stdout.flush()
 
 # Function to save the matched data to JSON and Excel
 def save_matched_data(matched_df):
@@ -99,8 +97,8 @@ def save_matched_data(matched_df):
 
         matched_json_filename = f"{date_stamp}_matched.json"
         matched_excel_filename = f"{date_stamp}_matched.xlsx"
-        matched_json_fullpath = f"{matched_json_path}/{matched_json_filename}"
-        matched_excel_fullpath = f"{matched_excel_path}/{matched_excel_filename}"
+        matched_json_fullpath = os.path.join(matched_json_path, matched_json_filename)
+        matched_excel_fullpath = os.path.join(matched_excel_path, matched_excel_filename)
 
         print(f"Saving matched data to JSON file: {matched_json_fullpath}")
         matched_df.to_json(matched_json_fullpath, orient='records', lines=True)
@@ -110,22 +108,25 @@ def save_matched_data(matched_df):
         print("Matched data successfully saved.")
     except Exception as e:
         print(f"An error occurred while saving matched data: {e}")
-
+        sys.stdout.flush()
 
 if __name__ == '__main__':
     try:
         run_spider()
     except Exception as e:
         print(f"An error occurred in run_spider: {e}")
+        sys.stdout.flush()
 
     try:
         convert_json_to_excel()
     except Exception as e:
         print(f"An error occurred in convert_json_to_excel: {e}")
+        sys.stdout.flush()
 
     try:
         run_comparison(crawled_excel_fullpath, reference_file_path)
     except Exception as e:
         print(f"An error occurred in run_comparison: {e}")
+        sys.stdout.flush()
 
-log_file.close()
+    logger.close()
